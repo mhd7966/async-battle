@@ -1,104 +1,47 @@
-# Async Messaging Comparison
+# RabbitMQ vs Kafka Consumer Performance Comparison
 
-This project provides a comparative overview of several popular async messaging systems, focusing on their consumption modes (pull/push) and concurrency control mechanisms. The systems covered are:
+This README demonstrates the differences in message consumption patterns using RabbitMQ and Kafka under various configurations. For each scenario, a performance chart or picture is provided to visualize the results.
 
-- RabbitMQ
-- Apache Kafka
-- JetStream (NATS)
-- Redis Streams
-- Redpanda
+## RabbitMQ Consumption Scenarios
 
-## Table of Contents
+We compare two main RabbitMQ consumer modes:
+- **Auto Acknowledge (auto ack)**
+- **Manual Acknowledge (manual ack)**
 
-- [Overview](#overview)
-- [Comparison Table](#comparison-table)
-- [Detailed Analysis](#detailed-analysis)
-  - [RabbitMQ](#rabbitmq)
-  - [Apache Kafka](#apache-kafka)
-  - [JetStream (NATS)](#jetstream-nats)
-  - [Redis Streams](#redis-streams)
-  - [Redpanda](#redpanda)
-- [Usage](#usage)
-- [License](#license)
+For each mode, we vary the `prefetch` count (the maximum number of unacknowledged messages a consumer can receive):
 
-## Overview
+### 1. Prefetch = 10
 
-Asynchronous messaging systems are crucial for decoupling components, improving scalability, and enabling reliable communication in distributed systems. Each system has distinct consumption models and concurrency controls that suit different use cases.
+- **Auto Ack**
+  - ![RabbitMQ Auto Ack Prefetch 10](images/rabbitmq_autoack_prefetch10.png)
+- **Manual Ack**
+  - ![RabbitMQ Manual Ack Prefetch 10](images/rabbitmq_manualack_prefetch10.png)
 
-## Comparison Table
+### 2. Prefetch = 30
 
-| System         | Consumption Mode        | Concurrency Control                   | Key Notes                             |
-|----------------|------------------------|---------------------------------------|---------------------------------------|
-| RabbitMQ       | Push (default), Pull   | Consumer prefetch, manual ack, QoS    | Flexible, strong routing              |
-| Apache Kafka   | Pull                   | Consumer groups, partition assignment | High throughput, order per partition  |
-| JetStream NATS | Pull, Push             | Max Ack Pending, consumer config      | Lightweight, event streaming          |
-| Redis Streams  | Pull (XREAD), Push via Pub/Sub | Consumer groups, pending entries | Simple, scalable, at-least-once       |
-| Redpanda       | Pull                   | Same as Kafka (Kafka API compatible)  | Kafka-compatible, low latency         |
+- **Auto Ack**
+  - ![RabbitMQ Auto Ack Prefetch 30](images/rabbitmq_autoack_prefetch30.png)
+- **Manual Ack**
+  - ![RabbitMQ Manual Ack Prefetch 30](images/rabbitmq_manualack_prefetch30.png)
 
-## Detailed Analysis
+---
 
-### RabbitMQ
+## Kafka Consumption Scenarios
 
-- **Consumption Mode:**  
-  - **Push:** By default, RabbitMQ pushes messages to consumers.
-  - **Pull:** AMQP supports basic.get for pull, but it's less common.
-- **Concurrency Control:**  
-  - Consumers can set prefetch limits (QoS) to control message flow.
-  - Manual acknowledgments ensure at-least-once delivery.
-- **Notes:**  
-  - Suitable for complex routing and flexible topologies.
+Kafka is tested with:
+- **Default Consumer Settings**
+  - ![Kafka Default Consumer](images/kafka_default_consumer.png)
+- **Controlled Concurrency**
+  - ![Kafka Controlled Concurrency](images/kafka_controlled_concurrency.png)
+  - ![Kafka Controlled Concurrency](images/kafka_controlled_concurrency2.png)
 
-### Apache Kafka
+---
 
-- **Consumption Mode:**  
-  - **Pull:** Consumers poll for messages at their own pace.
-- **Concurrency Control:**  
-  - Consumer groups enable multiple consumers to process partitions in parallel.
-  - Each partition is consumed by only one consumer in a group at a time.
-- **Notes:**  
-  - High throughput, horizontal scalability, strong ordering per partition.
+## Summary Table
 
-### JetStream (NATS)
-
-- **Consumption Mode:**  
-  - **Push:** JetStream can push messages to subscribers.
-  - **Pull:** Also supports pull-based consumption for batch or flow control.
-- **Concurrency Control:**  
-  - Max Ack Pending setting controls in-flight messages.
-  - Consumers can be configured for concurrency and delivery policies.
-- **Notes:**  
-  - Lightweight, cloud-native, supports both streaming and queue semantics.
-
-### Redis Streams
-
-- **Consumption Mode:**  
-  - **Pull:** Clients use XREAD/XREADGROUP to fetch messages.
-  - **Push:** Can use Pub/Sub for push, but with fewer guarantees.
-- **Concurrency Control:**  
-  - Consumer groups with pending entries management.
-  - Each message in a group is delivered to one consumer.
-- **Notes:**  
-  - Simple and scalable, at-least-once delivery, best for lightweight use cases.
-
-### Redpanda
-
-- **Consumption Mode:**  
-  - **Pull:** Fully Kafka API compatible; consumers poll for messages.
-- **Concurrency Control:**  
-  - Same as Kafka, using consumer groups and partition assignment.
-- **Notes:**  
-  - Kafka drop-in replacement, performance and operational improvements.
-
-## Usage
-
-This repository aims to provide code samples and benchmarks (if applicable) for each system, focusing on:
-
-- Setting up consumers with different modes (pull, push)
-- Configuring concurrency and scaling consumers
-- Measuring throughput and latency (optional in future)
-
-Please refer to the `/examples` directory (to be added) for sample implementations.
-
-## License
-
-This project is licensed under the MIT License.
+| Scenario                                   | RabbitMQ Auto Ack | RabbitMQ Manual Ack | Kafka Default | Kafka Controlled Concurrency |
+|---------------------------------------------|:-----------------:|:------------------:|:-------------:|:---------------------------:|
+| Prefetch = 1                               | ![](images/rabbitmq_autoack_prefetch1.png) | ![](images/rabbitmq_manualack_prefetch1.png) | ![](images/kafka_default_consumer.png) | ![](images/kafka_controlled_concurrency.png) |
+| Prefetch = 10                              | ![](images/rabbitmq_autoack_prefetch10.png) | ![](images/rabbitmq_manualack_prefetch10.png) |   |   |
+| Prefetch = 30                              | ![](images/rabbitmq_autoack_prefetch30.png) | ![](images/rabbitmq_manualack_prefetch30.png) 
+---

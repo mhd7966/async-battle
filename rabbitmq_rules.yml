@@ -1,0 +1,49 @@
+groups:
+  - name: rabbitmq_metrics
+    rules:
+      # Message consumption rate over different time windows
+      - record: broker_message_rate_1m
+        expr: rate(broker_total_messages_consumed[1m])
+      
+      - record: broker_message_rate_5m
+        expr: rate(broker_total_messages_consumed[5m])
+      
+      - record: broker_message_rate_15m
+        expr: rate(broker_total_messages_consumed[15m])
+      
+      # Average message consumption duration
+      - record: broker_avg_consume_duration_1m
+        expr: rate(broker_message_consume_duration_seconds_sum[1m]) / rate(broker_message_consume_duration_seconds_count[1m])
+      
+      - record: broker_avg_consume_duration_5m
+        expr: rate(broker_message_consume_duration_seconds_sum[5m]) / rate(broker_message_consume_duration_seconds_count[5m])
+      
+      # 95th percentile of message consumption duration
+      - record: broker_consume_duration_p95_1m
+        expr: histogram_quantile(0.95, rate(broker_message_consume_duration_seconds_bucket[1m]))
+      
+      - record: broker_consume_duration_p95_5m
+        expr: histogram_quantile(0.95, rate(broker_message_consume_duration_seconds_bucket[5m]))
+      
+      # Error rate
+      - record: broker_error_rate_1m
+        expr: rate(broker_message_consume_errors[1m])
+      
+      - record: broker_error_rate_5m
+        expr: rate(broker_message_consume_errors[5m])
+      
+      # Consumer efficiency (messages per second per consumer)
+      - record: broker_consumer_efficiency
+        expr: broker_messages_per_second / broker_consumer_count
+      
+      # Queue utilization (for RabbitMQ)
+      - record: rabbitmq_queue_utilization
+        expr: broker_queue_depth / (broker_queue_depth + broker_messages_per_second * 60)
+      
+      # Message throughput trend (increase/decrease over time)
+      - record: broker_message_throughput_trend_5m
+        expr: (broker_message_rate_5m - broker_message_rate_1m) / broker_message_rate_1m * 100
+      
+      # Consumer health score (based on error rate and throughput)
+      - record: broker_consumer_health_score
+        expr: (1 - (broker_error_rate_1m / (broker_message_rate_1m + 1))) * 100 
